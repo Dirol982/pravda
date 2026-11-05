@@ -16,27 +16,31 @@ npm run preview    # просмотр собранного dist/
 
 Папку `dist/` можно залить на любой хостинг (статические файлы).
 
-### Адрес сайта и подпуть
+### Публикация на GitHub Pages
 
-Адрес задаётся переменными окружения при сборке:
-
-| Где | `SITE_URL` | `BASE_PATH` |
-|---|---|---|
-| Свой домен (по умолчанию) | `https://sto-pravda.by` | `/` |
-| GitHub Pages | `https://dirol982.github.io` | `/pravda` |
+Pages публикуются из ветки `main`, корень репозитория (Settings → Pages → Deploy from a branch).
+Готовые HTML-файлы лежат прямо в корне, рядом с исходниками.
 
 ```bash
-SITE_URL=https://dirol982.github.io BASE_PATH=/pravda npm run build
+npm run publish    # собрать для https://dirol982.github.io/pravda/ и выложить файлы в корень
+git add -A && git commit -m "Обновление сайта" && git push origin main
 ```
 
-От них зависят canonical, sitemap, robots.txt, OG-теги и все внутренние ссылки.
+`npm run publish` удаляет файлы прошлой публикации (их список — в `.published.json`), копирует новые из `dist/`
+и создаёт `.nojekyll` (без него Pages не отдаст папку `_astro`). Исходники (`src/`, `public/`…) не трогаются.
 
-### Деплой на GitHub Pages
+**Не правьте HTML в корне руками** — правьте `src/data/*.json` и запускайте `npm run publish`.
 
-Workflow `.github/workflows/deploy.yml` собирает сайт при пуше в `main` (или вручную, Actions → Run workflow)
-и публикует его на `https://dirol982.github.io/pravda/`.
-В настройках репозитория: **Settings → Pages → Source: GitHub Actions**.
-Для своего домена поменяйте в workflow `SITE_URL`/`BASE_PATH` и добавьте `public/CNAME`.
+### Свой домен
+
+Для переезда на домен соберите с другими переменными:
+
+```bash
+SITE_URL=https://sto-pravda.by BASE_PATH=/ npm run publish
+```
+
+и добавьте файл `public/CNAME` с доменом. От этих переменных зависят canonical, sitemap, robots.txt, OG-теги и внутренние ссылки.
+`npm run build` без переменных собирает в `dist/` под `https://sto-pravda.by` — эту папку можно залить на любой хостинг.
 
 ## Где что править
 

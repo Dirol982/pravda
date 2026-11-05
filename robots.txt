@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dirol982.github.io/pravda/sitemap-index.xml
