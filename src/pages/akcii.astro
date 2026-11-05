@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import Cta from '../components/Cta.astro';
+import promos from '../data/promos.json';
+import { contacts, url } from '../lib/site';
+---
+<Base
+  title="Акции и скидки СТО Правда в Минске — день рождения, Instagram, гарантия"
+  description="Скидки автосервиса СТО Правда: −10% в день рождения, −5% за подписку в Instagram, скидка на первую заправку кондиционера, гарантия 1 год на запчасти."
+  crumbs={[{ name: 'Акции' }]}
+>
+  <header class="page-head wrap">
+    <p class="label"><b>Акции</b> · {promos.items.length} предложения</p>
+    <h1>Акции и скидки</h1>
+    <p class="lead">Скидки действуют на работы. Назовите акцию при записи или на приёмке.</p>
+  </header>
+  <section class="wrap">
+    <ol class="pr">
+      {promos.items.map((p, i) => (
+        <li class="pr__item" data-reveal id={p.id}>
+          <span class="pr__no mono">{String(i + 1).padStart(2, '0')}</span>
+          <span class="pr__badge mono">{p.badge}</span>
+          <div>
+            <h2>{p.title}</h2>
+            <p>{p.text}</p>
+            <p class="pr__terms mono">Условия: {p.terms.startsWith('TODO') ? 'уточняйте по телефону' : p.terms}</p>
+            {p.link === 'instagram' && <a class="btn btn--sm" href={contacts.social.instagram} target="_blank" rel="noopener">Открыть @sto.pravda</a>}
+            {p.service && <a class="btn btn--sm" href={url(`/uslugi/${p.service}/`)}>Цены на заправку</a>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+  <div style="height:64px"></div>
+  <Cta />
+</Base>
+<style>
+  .pr { list-style: none; padding: 0; margin: 0; border-top: 2px solid var(--line); }
+  .pr__item { display: grid; grid-template-columns: 48px 160px 1fr; gap: 20px; padding: clamp(20px, 3vw, 36px) 0; border-bottom: 1px solid var(--line); align-items: start; }
+  .pr__no { color: var(--ink-3); font-size: 13px; padding-top: 10px; }
+  .pr__badge { font-size: clamp(28px, 4vw, 44px); font-weight: 600; background: var(--accent); color: var(--accent-ink); padding: 4px 10px; justify-self: start; line-height: 1.1; }
+  .pr h2 { font-size: clamp(22px, 3vw, 32px); margin-bottom: 10px; }
+  .pr p { color: var(--ink-2); max-width: 60ch; }
+  .pr__terms { font-size: 13px; }
+  @media (max-width: 700px) { .pr__item { grid-template-columns: 1fr; gap: 10px; } .pr__no { display: none; } }
+</style>

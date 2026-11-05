@@ -1,0 +1,79 @@
+---
+import Icon from './Icon.astro';
+import OpenStatus from './OpenStatus.astro';
+import { url, contacts, site, tel, viberChat, hoursGroups, categories } from '../lib/site';
+const year = new Date().getFullYear();
+---
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr__grid">
+      <div class="ftr__brand">
+        <a class="ftr__logo" href={url('/')}>ПРАВДА</a>
+        <p>Автосервис в Минске.<br />Открытый заказ-наряд: цены, этапы, старые детали.</p>
+        <OpenStatus />
+        <dl class="ftr__hours">
+          {hoursGroups().map((g) => <div><dt>{g.days}</dt><dd class="mono">{g.time ?? 'выходной'}</dd></div>)}
+        </dl>
+      </div>
+      <div>
+        <p class="ftr__h">Контакты</p>
+        <address>
+          <p>{contacts.address.full}</p>
+          {contacts.phones.map((p) => <p><a class="mono" href={tel(p.number)}>{p.display}</a> <span class="ftr__op">{p.operator}</span></p>)}
+          <p><a href={`mailto:${contacts.email}`}>{contacts.email}</a></p>
+        </address>
+        <div class="ftr__soc">
+          <a href={viberChat()} aria-label="Viber"><Icon name="viber" /></a>
+          <a href={contacts.telegram} target="_blank" rel="noopener" aria-label="Telegram"><Icon name="telegram" /></a>
+          <a href={contacts.social.instagram} target="_blank" rel="noopener" aria-label="Instagram"><Icon name="instagram" /></a>
+          <a href={contacts.social.vk} target="_blank" rel="noopener" aria-label="ВКонтакте"><Icon name="vk" /></a>
+          <a href={contacts.social.youtube} target="_blank" rel="noopener" aria-label="YouTube"><Icon name="youtube" /></a>
+        </div>
+      </div>
+      <div>
+        <p class="ftr__h">Разделы</p>
+        <ul class="ftr__list">
+          {site.nav.map((n) => <li><a href={url(n.href)}>{n.label}</a></li>)}
+        </ul>
+      </div>
+      <div>
+        <p class="ftr__h">Оплата</p>
+        <ul class="ftr__list ftr__pay">
+          {contacts.payment.map((p) => <li>{p}</li>)}
+        </ul>
+      </div>
+    </div>
+    <div class="ftr__legal">
+      <p>{contacts.legal.name}, УНП {contacts.legal.unp}</p>
+      <p><a href={url('/cookie/')}>Политика cookie</a></p>
+      <p class="mono">© {year}</p>
+    </div>
+  </div>
+</footer>
+<style>
+  .ftr { background: var(--bg-2); border-top: 1px solid var(--line); padding: clamp(40px, 6vw, 72px) 0 calc(24px + var(--bar-h)); font-size: 15px; }
+  @media (min-width: 961px) { .ftr { padding-bottom: 24px; } }
+  .ftr__grid { display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr; gap: 32px; }
+  .ftr__logo { font: 800 28px/1 var(--font-head); text-decoration: none; }
+  .ftr__brand p { color: var(--ink-2); margin: 12px 0; }
+  .ftr__h { font: 500 11px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); margin-bottom: 14px; }
+  address { font-style: normal; }
+  address p { margin: 0 0 6px; }
+  address a { text-decoration: none; font-weight: 600; }
+  .ftr__op { font: 400 12px var(--font-mono); color: var(--ink-3); }
+  .ftr__soc { display: flex; gap: 6px; margin-top: 14px; }
+  .ftr__soc a { width: 44px; height: 44px; border: 1px solid var(--line); display: grid; place-items: center; border-radius: var(--radius); transition: background-color .2s; }
+  .ftr__soc a:hover { background: var(--accent); color: var(--accent-ink); }
+  .ftr__list { list-style: none; padding: 0; margin: 0; }
+  .ftr__list li { padding: 4px 0; }
+  .ftr__list a { text-decoration: none; }
+  .ftr__list a:hover { text-decoration: underline; }
+  .ftr__hours { margin: 12px 0 0; font-size: 14px; }
+  .ftr__hours div { display: flex; gap: 12px; }
+  .ftr__hours dt { width: 56px; color: var(--ink-3); }
+  .ftr__hours dd { margin: 0; }
+  .ftr__legal { display: flex; flex-wrap: wrap; gap: 8px 32px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--ink-3); }
+  .ftr__legal p { margin: 0; }
+  @media (max-width: 900px) { .ftr__grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .ftr__grid { grid-template-columns: 1fr; } }
+</style>

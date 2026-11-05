@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import { contacts, site } from '../lib/site';
+// TODO: текст политики согласовать с юристом (Закон РБ № 99-З «О защите персональных данных»).
+---
+<Base title="Политика в отношении cookie | СТО Правда" description="Какие cookie использует сайт СТО Правда и как их отключить." crumbs={[{ name: 'Политика cookie' }]}>
+  <header class="page-head wrap">
+    <p class="label"><b>Документ</b></p>
+    <h1>Политика в отношении cookie</h1>
+  </header>
+  <section class="wrap prose cookie-doc">
+    <p>Сайт принадлежит {contacts.legal.name} (УНП {contacts.legal.unp}).</p>
+    <h2>Что такое cookie</h2>
+    <p>Cookie — небольшие файлы, которые браузер сохраняет на вашем устройстве при посещении сайта.</p>
+    <h2>Какие cookie мы используем</h2>
+    <p>{site.metrika.id
+      ? 'Аналитические cookie сервиса Яндекс.Метрика — для подсчёта посещений и улучшения сайта. Данные обезличены.'
+      : 'Сейчас сайт не использует аналитические и рекламные cookie.'}</p>
+    <p>Встроенные Яндекс.Карты и виджет отзывов могут устанавливать собственные cookie Яндекса.</p>
+    <h2>Как отключить</h2>
+    <p>Вы можете удалить или запретить cookie в настройках браузера. Сайт продолжит работать.</p>
+    <h2>Контакты</h2>
+    <p>Вопросы по обработке данных: <a href={`mailto:${contacts.email}`}>{contacts.email}</a>.</p>
+  </section>
+  <div style="height:80px"></div>
+</Base>
+<style>
+  .cookie-doc h2 { font-size: 22px; margin-top: 32px; }
+</style>

@@ -1,0 +1,421 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import OpenStatus from '../components/OpenStatus.astro';
+import Photo from '../components/Photo.astro';
+import Quiz from '../components/Quiz.astro';
+import YaMap from '../components/YaMap.astro';
+import reviews from '../data/reviews.json';
+import promos from '../data/promos.json';
+import {
+  url, contacts, categories, catPriceLabel, catNo, getItem, itemPrice, mainPhone, tel,
+  vibro, vibroMin, routeUrl, fmt, hoursGroups, viberChat,
+} from '../lib/site';
+
+const ex = vibro.example;
+const sum = (l: { price: number }[]) => l.reduce((a, b) => a + b.price, 0);
+const exWithout = sum(ex.without.lines), exWith = sum(ex.with.lines);
+
+// Пример заказ-наряда в hero — позиции и цены берутся из прайса
+const sample = ['11.02', '04.03', '01.01'].map((id) => getItem(id)!).filter(Boolean);
+
+const steps = [
+  { t: 'Приёмка', d: 'Осматриваем машину при вас. Надеваем чехлы на руль и сиденье, кладём защитный коврик.' },
+  { t: 'Диагностика', d: 'Ищем причину, а не меняем всё подряд. Подвеску проверяем на вибростенде.' },
+  { t: 'Согласование цены', d: 'Называем работы и цену до начала ремонта. Без вашего согласия — ни одной лишней позиции.' },
+  { t: 'Ремонт', d: 'Работаем по согласованному заказ-наряду. Видеонаблюдение 24/7.' },
+  { t: 'Выдача', d: 'Отдаём старые детали — износ видно своими глазами. Гарантия 1 год на запчасти, купленные у нас.' },
+];
+const why = [
+  { t: 'Анонимное письмо директору', d: 'Если что-то не понравилось, можно сообщить руководителю напрямую и анонимно.', todo: 'TODO: как отправить письмо — ящик, форма, e-mail?' },
+  { t: 'Защитные чехлы', d: 'Руль, сиденье и пол закрываем до того, как мастер сядет в машину.' },
+  { t: 'Клиентская зона', d: 'Можно подождать на месте: кофе и Wi-Fi.' },
+  { t: 'Охраняемая парковка', d: 'Машина, оставленная на ремонт, стоит под охраной.' },
+  { t: 'Видеонаблюдение 24/7', d: 'Камеры работают круглосуточно.' },
+  { t: 'Гарантия 1 год', d: 'На запчасти, купленные у нас. Подбор запчастей — бесплатно.' },
+];
+const hours = hoursGroups().map((g) => `${g.days} ${g.time ?? 'выходной'}`).join(' · ');
+---
+<Base
+  title="СТО Правда — автосервис в Минске, ул. Бородинская | Открытые цены"
+  description={`Автосервис в Минске на ул. Бородинской: открытый заказ-наряд, цены до начала работ, старые детали — вам. Вибростенд от ${vibroMin} р., замена масла от ${getItem('01.01')?.price} р.`}
+>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero__in">
+      <div class="hero__text">
+        <p class="label">СТО в Минске · {contacts.address.street}</p>
+        <h1>Скажем правду о&nbsp;вашей машине</h1>
+        <ul class="hero__facts">
+          <li><span class="mono">01</span>Цены открыты</li>
+          <li><span class="mono">02</span>Согласуем каждый этап</li>
+          <li><span class="mono">03</span>Отдаём старые детали</li>
+        </ul>
+        <div class="btn-row">
+          <a class="btn btn--accent" href={tel(mainPhone.number)}><Icon name="phone" />Позвонить</a>
+          <a class="btn" href="#kviz">Узнать стоимость<Icon name="arrow" /></a>
+        </div>
+        <p class="hero__status"><OpenStatus /></p>
+      </div>
+      <div class="hero__doc" aria-label="Пример открытого заказ-наряда">
+        <div class="doc">
+          <div class="doc__head">
+            <span>Заказ-наряд</span><span class="mono">№ ____</span>
+          </div>
+          <dl class="doc__meta mono">
+            <div><dt>Клиент</dt><dd>вы</dd></div>
+            <div><dt>Статус</dt><dd>согласовано до начала работ</dd></div>
+          </dl>
+          <table class="order doc__table">
+            <thead><tr><th class="c-no">№</th><th>Работа</th><th class="c-price">Цена</th></tr></thead>
+            <tbody>
+              {sample.map((i) => <tr><td class="c-no">{i.id}</td><td>{i.name}</td><td class="c-price">{itemPrice(i)}</td></tr>)}
+            </tbody>
+          </table>
+          <ul class="doc__checks">
+            <li><Icon name="check" />Цена согласована до начала работ</li>
+            <li><Icon name="check" />Старые детали вернуть клиенту</li>
+            <li><Icon name="check" />Чехлы на руль, сиденье, коврик</li>
+          </ul>
+          <div class="doc__stamp mono" aria-hidden="true">ОТКРЫТЫЙ<br />ЗАКАЗ-НАРЯД</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- КАК МЫ РАБОТАЕМ -->
+  <section class="section" id="kak">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Открытый заказ-наряд</b> · как мы работаем</p>
+        <h2>Пять шагов, и на каждом вы знаете, что происходит</h2>
+      </div>
+      <ol class="steps">
+        {steps.map((s, i) => (
+          <li class="step" data-reveal style={`transition-delay:${i * 70}ms`}>
+            <span class="step__n mono">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{s.t}</h3>
+            <p>{s.d}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- ВИБРОСТЕНД -->
+  <section class="section section--paper vib">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Вибростенд</b> · диагностика подвески от {vibroMin} р.</p>
+        <h2>Меняем то, что изношено, а не «на всякий случай»</h2>
+        <p class="sub">Стенд раскачивает каждое колесо и показывает, какой узел подвески изношен. {vibro.duration}, без разборки.</p>
+      </div>
+      <div class="cmp" data-reveal>
+        <div class="cmp__col cmp__col--bad">
+          <p class="label label--plain">{ex.without.title}</p>
+          <p class="cmp__cap">{ex.without.caption}</p>
+          <ul>{ex.without.lines.map((l) => <li><span>{l.name}</span><span class="mono">≈{l.price} р.</span></li>)}</ul>
+          <p class="cmp__sum"><span>Итого</span><span class="mono">≈{exWithout} р.</span></p>
+        </div>
+        <div class="cmp__col cmp__col--ok">
+          <p class="label label--plain">{ex.with.title}</p>
+          <p class="cmp__cap">{ex.with.caption}</p>
+          <ul>{ex.with.lines.map((l) => <li><span>{l.name}</span><span class="mono">≈{l.price} р.</span></li>)}</ul>
+          <p class="cmp__sum"><span>Итого</span><span class="mono">≈{exWith} р.</span></p>
+        </div>
+        <div class="cmp__save">
+          <span class="label label--plain">Экономия</span>
+          <strong class="mono">{exWithout - exWith} р.</strong>
+          <a class="btn btn--accent" href={url('/vibrostend/')}>Про вибростенд<Icon name="arrow" /></a>
+        </div>
+      </div>
+      <p class="note">Пример для иллюстрации. Сумма зависит от автомобиля и найденного износа.</p>
+    </div>
+  </section>
+
+  <!-- УСЛУГИ -->
+  <section class="section" id="uslugi">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Услуги</b> · {categories.length} направлений</p>
+        <h2>Что ремонтируем</h2>
+        <p class="sub">Цены на работы, без запчастей. Полный прайс — в разделе <a href={url('/ceny/')}>«Цены»</a>.</p>
+      </div>
+      <ul class="tiles">
+        {categories.map((c) => (
+          <li data-season={(c as any).seasonal ? 'winter' : undefined}>
+            <a class="tile" href={url(`/uslugi/${c.slug}/`)}>
+              <span class="tile__no mono">{catNo(c)}</span>
+              <span class="tile__name">{c.short}</span>
+              <span class="tile__price mono">{catPriceLabel(c)}</span>
+              {(c as any).seasonal && <span class="tile__season mono">сезон</span>}
+              <Icon name="arrow" class="tile__arr" />
+            </a>
+          </li>
+        ))}
+        <li>
+          <a class="tile tile--accent" href={url('/vibrostend/')}>
+            <span class="tile__no mono">★</span>
+            <span class="tile__name">Вибростенд</span>
+            <span class="tile__price mono">от {vibroMin} р.</span>
+            <Icon name="arrow" class="tile__arr" />
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- КВИЗ -->
+  <section class="section section--paper" id="kviz">
+    <div class="wrap kviz">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>3 вопроса</b> · расчёт и запись</p>
+        <h2>Узнайте стоимость за минуту</h2>
+        <p class="sub">Ответьте на три вопроса — покажем ориентир по прайсу и соберём заявку. Отправьте её в Viber, Telegram или WhatsApp одной кнопкой.</p>
+      </div>
+      <Quiz />
+    </div>
+  </section>
+
+  <!-- ПОЧЕМУ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Почему «Правда»</b></p>
+        <h2>Что вы получаете, кроме ремонта</h2>
+      </div>
+      <div class="why">
+        <ul class="grid why__grid">
+          {why.map((w, i) => (
+            <li class="cell" data-reveal style={`transition-delay:${(i % 3) * 60}ms`}>
+              <span class="mono why__n">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{w.t}</h3>
+              <p>{w.d}</p>
+            </li>
+          ))}
+        </ul>
+        <div class="why__photos">
+          <Photo src="/photos/klientskaya-zona.webp" label="Фото: клиентская зона" alt="Клиентская зона СТО Правда" w={800} h={600} />
+          <Photo src="/photos/master.webp" label="Фото: мастер" alt="Мастер СТО Правда за работой" w={800} h={600} />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ОТЗЫВЫ -->
+  <section class="section section--paper">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Отзывы</b> · {reviews.source}</p>
+        <h2>Что говорят клиенты</h2>
+      </div>
+      <ul class="reviews">
+        {reviews.items.map((r, i) => (
+          <li class="review" data-reveal style={`transition-delay:${i * 70}ms`}>
+            <blockquote><p>{r.text}</p></blockquote>
+            <p class="review__who"><b>{r.author}</b>{r.car && <span class="mono"> · {r.car}</span>}</p>
+            <p class="review__src mono">{reviews.source}</p>
+          </li>
+        ))}
+      </ul>
+      <div class="btn-row reviews__more">
+        <a class="btn" href={contacts.yandex.reviewsUrl} target="_blank" rel="noopener">Все отзывы на Яндексе<Icon name="arrow" /></a>
+        <button class="btn" type="button" data-ya-reviews>Показать отзывы здесь</button>
+      </div>
+      <div class="ya-reviews" hidden data-ya-box></div>
+    </div>
+  </section>
+
+  <!-- АКЦИИ -->
+  <section class="section">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <p class="label"><b>Акции</b></p>
+        <h2>Скидки и гарантия</h2>
+      </div>
+      <ul class="grid promos">
+        {promos.items.map((p) => (
+          <li class="cell promo" data-reveal>
+            <span class="promo__badge mono">{p.badge}</span>
+            <h3>{p.title}</h3>
+            <p>{p.short}</p>
+          </li>
+        ))}
+      </ul>
+      <p style="margin-top:20px"><a class="btn" href={url('/akcii/')}>Условия акций<Icon name="arrow" /></a></p>
+    </div>
+  </section>
+
+  <!-- КОНТАКТЫ -->
+  <section class="section section--paper" id="kontakty">
+    <div class="wrap contacts">
+      <div class="contacts__info" data-reveal>
+        <p class="label"><b>Контакты</b></p>
+        <h2>{contacts.address.street}</h2>
+        <p class="contacts__city">{contacts.address.city}</p>
+        <p><OpenStatus /></p>
+        <p class="mono contacts__hours">{hours}</p>
+        <ul class="contacts__phones">
+          {contacts.phones.map((p) => <li><a href={tel(p.number)} class="mono">{p.display}</a> <span>{p.operator}</span></li>)}
+        </ul>
+        <div class="btn-row">
+          <a class="btn btn--accent" href={routeUrl} target="_blank" rel="noopener"><Icon name="route" />Построить маршрут</a>
+          <a class="btn" href={viberChat()}><Icon name="viber" />Viber</a>
+        </div>
+        <p class="contacts__more"><a href={url('/kontakty/')}>Как заехать и все контакты →</a></p>
+      </div>
+      <YaMap />
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Виджет отзывов Яндекса грузим только по клику — не тормозит загрузку страницы
+  const b = document.querySelector<HTMLButtonElement>('[data-ya-reviews]');
+  const box = document.querySelector<HTMLElement>('[data-ya-box]');
+  b?.addEventListener('click', () => {
+    if (!box) return;
+    box.hidden = false;
+    box.innerHTML = `<iframe src="https://yandex.ru/maps-reviews-widget/${box.dataset.org ?? ''}?comments" title="Отзывы на Яндекс.Картах" loading="lazy"></iframe>`;
+    b.remove();
+  });
+</script>
+<script is:inline define:vars={{ org: contacts.yandex.orgId }}>
+  var bx = document.querySelector('[data-ya-box]'); if (bx) bx.dataset.org = org;
+</script>
+
+<style>
+  /* HERO */
+  .hero { padding-block: clamp(28px, 6vw, 80px) clamp(48px, 7vw, 96px); background:
+    linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 100% 48px; background-color: var(--bg); }
+  .hero__in { display: grid; grid-template-columns: 1.25fr 1fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
+  .hero h1 { margin: 18px 0 24px; font-size: clamp(38px, 7.2vw, 92px); }
+  .hero__facts { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-wrap: wrap; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .hero__facts li { flex: 1 1 0; min-width: 170px; padding: 14px 16px 14px 0; font-weight: 700; font-size: 17px; display: flex; gap: 10px; align-items: baseline; }
+  .hero__facts li + li { border-left: 1px solid var(--line); padding-left: 16px; }
+  .hero__facts span { color: var(--ink-3); font-size: 12px; font-weight: 400; }
+  .hero__status { margin: 18px 0 0; }
+  @media (max-width: 600px) {
+    .hero__facts { flex-direction: column; }
+    .hero__facts li { padding: 10px 0; }
+    .hero__facts li + li { border-left: 0; border-top: 1px solid var(--line-soft); padding-left: 0; }
+    .hero .btn-row .btn { flex: 1; }
+  }
+
+  .doc { position: relative; background: var(--paper); border: 1px solid var(--line); padding: 20px; box-shadow: 8px 8px 0 var(--ink); transform: rotate(.6deg); }
+  .doc__head { display: flex; justify-content: space-between; font: 800 18px/1 var(--font-head); text-transform: uppercase; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
+  .doc__head .mono { font: 400 14px var(--font-mono); }
+  .doc__meta { margin: 10px 0 14px; font-size: 12px; }
+  .doc__meta div { display: flex; gap: 10px; padding: 3px 0; border-bottom: 1px dotted var(--line-soft); }
+  .doc__meta dt { color: var(--ink-3); width: 64px; flex: none; }
+  .doc__meta dd { margin: 0; }
+  .doc__table { font-size: 14px; }
+  .doc__table th, .doc__table td { padding: 8px 10px; }
+  .doc__checks { list-style: none; margin: 14px 0 0; padding: 0; font-size: 14px; font-weight: 600; }
+  .doc__checks li { display: flex; gap: 10px; align-items: center; padding: 5px 0; }
+  .doc__checks svg { width: 18px; height: 18px; background: var(--accent); color: var(--accent-ink); padding: 2px; flex: none; }
+  .doc__stamp { position: absolute; right: 14px; bottom: 14px; border: 2px solid var(--accent); color: var(--accent); padding: 6px 8px; font-size: 10px; font-weight: 600; letter-spacing: .1em; line-height: 1.2; transform: rotate(-8deg); opacity: .9; }
+  @media (max-width: 900px) {
+    .hero__in { grid-template-columns: 1fr; }
+    .doc { transform: none; box-shadow: 5px 5px 0 var(--ink); }
+    .doc__stamp { display: none; }
+  }
+
+  /* ШАГИ */
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 2px solid var(--line); }
+  .step { padding: 20px 20px 8px 0; position: relative; }
+  .step + .step { padding-left: 20px; border-left: 1px solid var(--line-soft); }
+  .step__n { display: inline-block; background: var(--accent); color: var(--accent-ink); padding: 3px 7px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .step p { color: var(--ink-2); font-size: 15px; }
+  @media (max-width: 1000px) {
+    .steps { grid-template-columns: 1fr; border-top: 0; }
+    .step, .step + .step { display: grid; grid-template-columns: 56px 1fr; padding: 18px 0; border-left: 0; border-top: 1px solid var(--line); }
+    .step__n { grid-row: span 2; align-self: start; justify-self: start; }
+    .step h3 { margin-bottom: 6px; }
+    .step p { margin: 0; }
+  }
+
+  /* ВИБРОСТЕНД-сравнение */
+  .cmp { display: grid; grid-template-columns: 1fr 1fr auto; border: 1px solid var(--line); background: var(--bg); }
+  .cmp__col { padding: clamp(18px, 3vw, 32px); }
+  .cmp__col + .cmp__col { border-left: 1px solid var(--line); }
+  .cmp__col--bad .label { color: var(--bad); }
+  .cmp__col--ok .label { color: var(--ok); }
+  .cmp__cap { font-weight: 700; font-size: 18px; margin: 8px 0 16px; min-height: 2.6em; }
+  .cmp ul { list-style: none; margin: 0; padding: 0; }
+  .cmp li, .cmp__sum { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+  .cmp__col--bad li span:first-child { text-decoration: line-through; text-decoration-color: var(--bad); }
+  .cmp__sum { border-bottom: 0; border-top: 2px solid var(--line); margin: 6px 0 0; font-weight: 700; }
+  .cmp__save { background: var(--accent); color: var(--accent-ink); padding: clamp(18px, 3vw, 32px); display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 240px; }
+  .cmp__save .label { color: var(--accent-ink); }
+  .cmp__save strong { font-size: clamp(44px, 6vw, 72px); line-height: 1; }
+  .cmp__save .btn { background: var(--ink); color: var(--bg); border-color: var(--ink); margin-top: 12px; }
+  @media (max-width: 900px) {
+    .cmp { grid-template-columns: 1fr; }
+    .cmp__col + .cmp__col { border-left: 0; border-top: 1px solid var(--line); }
+    .cmp__cap { min-height: 0; }
+  }
+
+  /* ПЛИТКИ */
+  .tiles { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .tiles > li { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .tile { position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 10px; height: 100%; min-height: 150px; padding: 18px; text-decoration: none; background: var(--paper); transition: background-color .2s var(--ease); }
+  .tile__no { font-size: 12px; color: var(--ink-3); }
+  .tile__name { font: 700 clamp(17px, 1.6vw, 21px)/1.15 var(--font-head); letter-spacing: -0.01em; }
+  .tile__price { font-weight: 600; font-size: 15px; }
+  .tile__arr { position: absolute; right: 16px; bottom: 18px; transition: transform .2s var(--ease); }
+  .tile__season { position: absolute; top: 14px; right: 14px; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; border: 1px solid var(--line); padding: 2px 6px; display: none; }
+  .is-season .tile__season { display: block; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tile:hover { background: var(--accent); color: var(--accent-ink); }
+  .tile:hover .tile__no { color: var(--accent-ink); }
+  .tile:hover .tile__arr { transform: translateX(4px); }
+  .tile--accent { background: var(--ink); color: var(--bg); }
+  .tile--accent .tile__no { color: var(--accent); }
+  @media (max-width: 1100px) { .tiles { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px) { .tiles { grid-template-columns: 1fr 1fr; } .tile { min-height: 128px; padding: 14px; } }
+  @media (max-width: 380px) { .tile__name { font-size: 15px; } }
+
+  .kviz { max-width: 980px; }
+
+  /* ПОЧЕМУ */
+  .why { display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); }
+  .why__grid { list-style: none; padding: 0; margin: 0; grid-template-columns: repeat(3, 1fr); }
+  .why__grid h3 { margin: 10px 0 8px; }
+  .why__grid p { color: var(--ink-2); font-size: 15px; margin: 0; }
+  .why__n { font-size: 12px; color: var(--ink-3); }
+  .why__photos { display: grid; gap: var(--gap); align-content: start; }
+  @media (max-width: 1000px) { .why { grid-template-columns: 1fr; } .why__photos { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px) { .why__grid { grid-template-columns: 1fr; } .why__photos { grid-template-columns: 1fr; } }
+
+  /* ОТЗЫВЫ */
+  .reviews { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+  .review { background: var(--bg); border: 1px solid var(--line); padding: 22px; display: flex; flex-direction: column; }
+  .review blockquote { margin: 0 0 16px; flex: 1; }
+  .review blockquote p { font-size: 17px; margin: 0; }
+  .review blockquote p::before { content: '«'; } .review blockquote p::after { content: '»'; }
+  .review__who { margin: 0; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+  .review__src { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; margin: 4px 0 0; }
+  .reviews__more { margin-top: 24px; }
+  .ya-reviews { margin-top: 24px; border: 1px solid var(--line); height: 640px; }
+  .ya-reviews :global(iframe) { width: 100%; height: 100%; border: 0; }
+  @media (max-width: 900px) { .reviews { grid-template-columns: 1fr; } }
+
+  /* АКЦИИ */
+  .promos { list-style: none; padding: 0; margin: 0; grid-template-columns: repeat(4, 1fr); }
+  .promo__badge { display: inline-block; font-size: 22px; font-weight: 600; background: var(--accent); color: var(--accent-ink); padding: 2px 8px; margin-bottom: 14px; }
+  .promo p { color: var(--ink-2); margin: 0; font-size: 15px; }
+  @media (max-width: 1000px) { .promos { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .promos { grid-template-columns: 1fr; } }
+
+  /* КОНТАКТЫ */
+  .contacts { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--gap); align-items: stretch; }
+  .contacts h2 { margin: 14px 0 4px; font-size: clamp(24px, 3.4vw, 40px); }
+  .contacts__city { color: var(--ink-3); font-family: var(--font-mono); margin-bottom: 20px; }
+  .contacts__hours { font-size: 14px; color: var(--ink-2); }
+  .contacts__phones { list-style: none; padding: 0; margin: 16px 0 24px; }
+  .contacts__phones li { padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+  .contacts__phones a { font-size: 20px; font-weight: 600; text-decoration: none; }
+  .contacts__phones span { font: 400 12px var(--font-mono); color: var(--ink-3); }
+  .contacts__more { margin-top: 20px; }
+  @media (max-width: 860px) { .contacts { grid-template-columns: 1fr; } }
+</style>

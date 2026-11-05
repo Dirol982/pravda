@@ -1,0 +1,13 @@
+---
+import { url } from '../lib/site';
+interface Props { src: string; label: string; alt: string; w?: number; h?: number; eager?: boolean; class?: string }
+const { src, label, alt, w = 1200, h = 800, eager = false, class: cls } = Astro.props;
+const base = src.replace(/\.(webp|avif|jpe?g|png)$/, '');
+---
+<figure class:list={['photo', cls]} style={`aspect-ratio:${w}/${h}`}>
+  <picture>
+    <source srcset={url(`${base}.avif`)} type="image/avif" />
+    <img src={url(`${base}.webp`)} alt={alt} width={w} height={h} loading={eager ? 'eager' : 'lazy'} decoding="async" fetchpriority={eager ? 'high' : 'auto'} />
+  </picture>
+  <figcaption>{label}</figcaption>
+</figure>

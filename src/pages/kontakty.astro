@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import OpenStatus from '../components/OpenStatus.astro';
+import Photo from '../components/Photo.astro';
+import YaMap from '../components/YaMap.astro';
+import { contacts, hoursGroups, tel, viberChat, routeUrl } from '../lib/site';
+const howTo = contacts.howToGet.filter((s) => !s.startsWith('TODO'));
+---
+<Base
+  title="Контакты СТО Правда — Минск, ул. Бородинская, 2к10 | Телефон, часы работы"
+  description={`Автосервис СТО Правда: ${contacts.address.full}. Телефоны ${contacts.phones.map((p) => p.display).join(', ')}. Viber, Telegram, маршрут на Яндекс.Картах.`}
+  crumbs={[{ name: 'Контакты' }]}
+>
+  <header class="page-head wrap">
+    <p class="label"><b>Контакты</b> · <OpenStatus /></p>
+    <h1>{contacts.address.street}</h1>
+    <p class="lead">{contacts.address.city}. Позвоните или напишите в мессенджер — подскажем ближайшее свободное время.</p>
+  </header>
+
+  <section class="wrap kt">
+    <div class="kt__col">
+      <div class="kt__block">
+        <p class="label label--plain">Телефоны</p>
+        {contacts.phones.map((p) => <p class="kt__phone"><a class="mono" href={tel(p.number)}>{p.display}</a> <span>{p.operator}{p.main && ' · основной'}</span></p>)}
+      </div>
+      <div class="kt__block">
+        <p class="label label--plain">Мессенджеры и почта</p>
+        <div class="kt__btns">
+          <a class="btn" href={viberChat()}><Icon name="viber" />Viber</a>
+          <a class="btn" href={contacts.telegram} target="_blank" rel="noopener"><Icon name="telegram" />Telegram</a>
+          <a class="btn" href={`mailto:${contacts.email}`}><Icon name="mail" />E-mail</a>
+        </div>
+        <p class="mono kt__mail">{contacts.email}</p>
+      </div>
+      <div class="kt__block">
+        <p class="label label--plain">Часы работы</p>
+        <dl class="kt__hours mono">
+          {hoursGroups().map((g) => <div><dt>{g.days}</dt><dd>{g.time ?? 'выходной'}</dd></div>)}
+        </dl>
+      </div>
+      <div class="kt__block">
+        <p class="label label--plain">Как заехать</p>
+        {howTo.length ? howTo.map((s) => <p>{s}</p>) : <p>Постройте маршрут в Яндекс.Картах.</p>}
+        <a class="btn btn--accent" href={routeUrl} target="_blank" rel="noopener"><Icon name="route" />Построить маршрут</a>
+      </div>
+      <div class="kt__block">
+        <p class="label label--plain">Соцсети</p>
+        <ul class="kt__soc">
+          <li><a href={contacts.social.instagram} target="_blank" rel="noopener"><Icon name="instagram" />Instagram</a></li>
+          <li><a href={contacts.social.vk} target="_blank" rel="noopener"><Icon name="vk" />ВКонтакте</a></li>
+          <li><a href={contacts.social.youtube} target="_blank" rel="noopener"><Icon name="youtube" />YouTube</a></li>
+          <li><a href={contacts.yandex.reviewsUrl} target="_blank" rel="noopener"><Icon name="route" />Яндекс: отзывы</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="kt__col">
+      <div class="kt__map"><YaMap /></div>
+      <Photo src="/photos/vhod.webp" label="Фото: въезд / ворота" alt="Въезд на территорию СТО Правда" w={1200} h={800} />
+    </div>
+  </section>
+  <div style="height:80px"></div>
+</Base>
+<style>
+  .kt { display: grid; grid-template-columns: 1fr 1.3fr; gap: clamp(24px, 4vw, 56px); }
+  .kt__block { padding: 20px 0; border-top: 1px solid var(--line); }
+  .kt__block .label { margin-bottom: 10px; }
+  .kt__phone { margin: 0 0 6px; }
+  .kt__phone a { font-size: clamp(22px, 3vw, 30px); font-weight: 600; text-decoration: none; }
+  .kt__phone span { font: 400 12px var(--font-mono); color: var(--ink-3); }
+  .kt__btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  .kt__mail { font-size: 14px; margin-top: 10px; }
+  .kt__hours { margin: 0; }
+  .kt__hours div { display: grid; grid-template-columns: 90px 1fr; padding: 6px 0; border-bottom: 1px dotted var(--line-soft); }
+  .kt__hours dt { color: var(--ink-3); }
+  .kt__hours dd { margin: 0; }
+  .kt__soc { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kt__soc a { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--line); text-decoration: none; font-weight: 600; }
+  .kt__soc a:hover { background: var(--accent); color: var(--accent-ink); }
+  .kt__col:last-child { display: grid; gap: var(--gap); align-content: start; }
+  .kt__map { height: 480px; }
+  @media (max-width: 900px) { .kt { grid-template-columns: 1fr; } .kt__map { height: 340px; } }
+</style>

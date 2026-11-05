@@ -1,0 +1,79 @@
+---
+import Base from '../layouts/Base.astro';
+import Cta from '../components/Cta.astro';
+import Icon from '../components/Icon.astro';
+import { contacts, mainPhone, tel } from '../lib/site';
+// TODO: условия для юрлиц неизвестны. Тексты ниже — каркас, заполнить фактами:
+//  - минимальный размер парка / есть ли ограничения;
+//  - отсрочка платежа, порядок выставления счетов;
+//  - какие закрывающие документы (акт, ЭСЧФ, ТТН);
+//  - есть ли персональный менеджер, приоритетная запись, отчётность по каждой машине.
+const points = [
+  { t: 'Договор', d: 'Заключаем договор на обслуживание автомобилей организации.', todo: true },
+  { t: 'Безналичный расчёт', d: 'Оплата по счёту с расчётного счёта организации.', todo: true },
+  { t: 'Документы', d: 'Закрывающие документы по каждому заказ-наряду.', todo: true },
+  { t: 'Открытый заказ-наряд', d: 'По каждой машине — список работ, цены и старые детали. Работы согласуем до начала ремонта.', todo: false },
+];
+---
+<Base
+  title="Обслуживание автомобилей юрлиц и автопарков в Минске | СТО Правда"
+  description="Ремонт и ТО автомобилей организаций в Минске: договор, безналичный расчёт, закрывающие документы, открытый заказ-наряд по каждой машине."
+  crumbs={[{ name: 'Юрлицам' }]}
+>
+  <header class="page-head wrap">
+    <p class="label"><b>Юрлицам</b> · автопарки</p>
+    <h1>Обслуживание автомобилей организаций</h1>
+    <p class="lead">Ремонт и ТО служебных машин по договору, оплата по безналу. Тот же открытый заказ-наряд: что сделано, сколько стоит, что заменено.</p>
+  </header>
+  <section class="section">
+    <div class="wrap">
+      <ul class="grid yl">
+        {points.map((p, i) => (
+          <li class="cell" data-reveal data-todo={p.todo ? 'TODO: уточнить условия' : undefined}>
+            <span class="mono n">{String(i + 1).padStart(2, '0')}</span>
+            <h2>{p.t}</h2>
+            <p>{p.d}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="note">Условия договора, отсрочки платежа и перечень документов уточняйте по телефону или почте.</p>
+    </div>
+  </section>
+  <section class="section section--paper">
+    <div class="wrap req">
+      <div>
+        <p class="label"><b>Реквизиты исполнителя</b></p>
+        <dl class="mono">
+          <div><dt>Организация</dt><dd>{contacts.legal.name}</dd></div>
+          <div><dt>УНП</dt><dd>{contacts.legal.unp}</dd></div>
+          <div><dt>Адрес СТО</dt><dd>{contacts.address.full}</dd></div>
+          <div><dt>E-mail</dt><dd><a href={`mailto:${contacts.email}`}>{contacts.email}</a></dd></div>
+        </dl>
+      </div>
+      <div>
+        <p class="label"><b>Запрос на договор</b></p>
+        <p>Напишите на почту название организации, УНП и количество автомобилей — подготовим предложение.</p>
+        <div class="btn-row">
+          <a class="btn btn--accent" href={`mailto:${contacts.email}?subject=${encodeURIComponent('Договор на обслуживание автопарка')}`}><Icon name="mail" />Написать на почту</a>
+          <a class="btn" href={tel(mainPhone.number)}><Icon name="phone" />{mainPhone.display}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <Cta />
+</Base>
+<style>
+  .yl { list-style: none; padding: 0; margin: 0; grid-template-columns: repeat(4, 1fr); }
+  .yl h2 { font-size: 22px; margin: 10px 0 8px; }
+  .yl p { color: var(--ink-2); margin: 0; }
+  .n { font-size: 12px; color: var(--ink-3); }
+  @media (max-width: 1000px) { .yl { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .yl { grid-template-columns: 1fr; } }
+  .req { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 72px); }
+  .req dl { margin: 16px 0 0; font-size: 14px; }
+  .req dl div { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+  .req dt { color: var(--ink-3); }
+  .req dd { margin: 0; overflow-wrap: anywhere; }
+  .req p { margin-top: 16px; }
+  @media (max-width: 860px) { .req { grid-template-columns: 1fr; } }
+</style>

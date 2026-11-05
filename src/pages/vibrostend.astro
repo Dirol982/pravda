@@ -1,0 +1,256 @@
+---
+import Base from '../layouts/Base.astro';
+import Cta from '../components/Cta.astro';
+import Photo from '../components/Photo.astro';
+import Icon from '../components/Icon.astro';
+import { vibro, vibroMin, priceText, mainPhone, tel, url, absUrl } from '../lib/site';
+
+const ex = vibro.example;
+const sum = (l: { price: number }[]) => l.reduce((a, b) => a + b.price, 0);
+const sWithout = sum(ex.without.lines), sWith = sum(ex.with.lines);
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: vibro.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Диагностика подвески на вибростенде в Минске',
+  serviceType: 'Диагностика подвески',
+  url: absUrl('/vibrostend/'),
+  areaServed: { '@type': 'City', name: 'Минск' },
+  provider: { '@id': absUrl('/') + '#org' },
+  offers: vibro.prices.flatMap((p) => [
+    { '@type': 'Offer', name: `${p.label}, 1 ось`, price: p.oneAxle, priceCurrency: 'BYN' },
+    { '@type': 'Offer', name: `${p.label}, 2 оси`, price: p.twoAxles, priceCurrency: 'BYN' },
+  ]),
+};
+---
+<Base
+  title={`Диагностика подвески на вибростенде в Минске — от ${vibroMin} р. | СТО Правда`}
+  description={`Проверка подвески на вибростенде за ${vibro.duration}, без разборки, с отчётом. Легковой — ${vibro.prices[0].oneAxle} р. за ось, джип и микроавтобус — ${vibro.prices[1].oneAxle} р. Минск, ул. Бородинская.`}
+  crumbs={[{ name: 'Вибростенд' }]}
+  schema={[serviceLd, faqLd]}
+>
+  <header class="page-head wrap vh">
+    <div>
+      <p class="label"><b>Вибростенд</b> · диагностика подвески</p>
+      <h1>Подвеска на вибростенде: что менять на самом деле</h1>
+      <p class="lead">Стенд раскачивает каждое колесо и показывает износ по каждому узлу. Вы меняете то, что изношено, а не всё подряд.</p>
+      <ul class="vh__facts mono">{vibro.facts.map((f) => <li>{f}</li>)}</ul>
+      <div class="btn-row">
+        <a class="btn btn--accent" href={tel(mainPhone.number)}><Icon name="phone" />Записаться</a>
+        <a class="btn" href="#calc">Посчитать цену<Icon name="arrow" /></a>
+      </div>
+    </div>
+    <Photo src="/photos/vibrostend.webp" label="Фото: вибростенд" alt="Вибростенд для диагностики подвески" w={1200} h={900} eager />
+  </header>
+
+  <!-- Экономия -->
+  <section class="section section--paper">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label"><b>Пример</b> · было / стало</p>
+        <h2>Сколько стоит «на глаз»</h2>
+        <p class="sub">Переключите, чтобы сравнить два заказ-наряда на одну и ту же машину.</p>
+      </div>
+      <div class="sv" data-sv>
+        <div class="sv__tabs" role="tablist">
+          <button type="button" role="tab" aria-selected="true" data-sv-tab="without">{ex.without.title}</button>
+          <button type="button" role="tab" aria-selected="false" data-sv-tab="with">{ex.with.title}</button>
+        </div>
+        <div class="sv__body">
+          {(['without', 'with'] as const).map((k) => (
+            <div class="sv__panel" data-sv-panel={k} hidden={k === 'with'}>
+              <p class="sv__cap">{ex[k].caption}</p>
+              <table class="order">
+                <tbody>
+                  {ex.without.lines.concat(ex.with.lines.filter((l) => !ex.without.lines.some((w) => w.name === l.name))).map((l) => {
+                    const inK = ex[k].lines.some((x) => x.name === l.name);
+                    return <tr class:list={{ 'is-off': !inK }}><td>{l.name}</td><td class="c-price">{inK ? `≈${l.price} р.` : '—'}</td></tr>;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ))}
+          <div class="sv__total">
+            <span class="label label--plain">Итого по заказ-наряду</span>
+            <strong class="mono"><span data-sv-sum>{sWithout}</span> р.</strong>
+            <span class="sv__save mono" data-sv-save hidden>экономия {sWithout - sWith} р.</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Пример для иллюстрации. Ранний ремонт подвески обходится в 3–5 раз дешевле запущенного.</p>
+    </div>
+  </section>
+
+  <!-- Цены + калькулятор -->
+  <section class="section" id="calc">
+    <div class="wrap vc">
+      <div>
+        <div class="sec-head">
+          <p class="label"><b>Цены</b></p>
+          <h2>Стоимость проверки</h2>
+        </div>
+        <table class="order">
+          <thead><tr><th scope="col">Тип автомобиля</th><th class="c-price" scope="col">1 ось</th><th class="c-price" scope="col">2 оси</th></tr></thead>
+          <tbody>
+            {vibro.prices.map((p) => <tr><td>{p.label}<span class="muted">{p.hint}</span></td><td class="c-price">{priceText(p.oneAxle)}</td><td class="c-price">{priceText(p.twoAxles)}</td></tr>)}
+          </tbody>
+        </table>
+        <p class="note">{vibro.secondAxleNote}</p>
+      </div>
+      <form class="calc" onsubmit="return false" data-calc={JSON.stringify(vibro.prices)}>
+        <p class="label">Калькулятор</p>
+        <fieldset>
+          <legend>Тип автомобиля</legend>
+          {vibro.prices.map((p, i) => <label class="opt"><input type="radio" name="t" value={p.id} checked={i === 0} /><span>{p.label}</span></label>)}
+        </fieldset>
+        <fieldset>
+          <legend>Сколько осей проверить</legend>
+          <label class="opt"><input type="radio" name="a" value="1" checked /><span>Одну</span></label>
+          <label class="opt"><input type="radio" name="a" value="2" /><span>Обе</span></label>
+        </fieldset>
+        <div class="calc__out"><span>Стоимость</span><output class="mono" data-calc-out>{priceText(vibro.prices[0].oneAxle)}</output></div>
+        <a class="btn btn--accent" href={tel(mainPhone.number)}><Icon name="phone" />Записаться на проверку</a>
+      </form>
+    </div>
+  </section>
+
+  <!-- Что проверяем -->
+  <section class="section section--paper">
+    <div class="wrap">
+      <div class="sec-head"><p class="label"><b>Что проверяем</b></p><h2>Четыре группы узлов</h2></div>
+      <ul class="grid g4">
+        {vibro.checks.map((c, i) => <li class="cell" data-reveal><span class="mono n">{String(i + 1).padStart(2, '0')}</span><h3>{c.name}</h3><p>{c.text}</p></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap two">
+      <div>
+        <p class="label"><b>Что это даёт</b></p>
+        <ul class="ben">{vibro.benefits.map((b) => <li data-reveal><h3>{b.title}</h3><p>{b.text}</p></li>)}</ul>
+      </div>
+      <div>
+        <p class="label"><b>Когда полезен</b></p>
+        <ul class="ben">{vibro.when.map((b) => <li data-reveal><h3>{b.title}</h3><p>{b.text}</p></li>)}</ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--paper">
+    <div class="wrap faq">
+      <div class="sec-head"><p class="label"><b>Вопросы</b></p><h2>Частые вопросы</h2></div>
+      {vibro.faq.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+    </div>
+  </section>
+
+  <Cta title="Запишитесь на вибростенд" text={`${vibro.duration}, без разборки. После проверки — отчёт с рекомендациями.`} />
+</Base>
+
+<script>
+  // Было / стало
+  const sv = document.querySelector<HTMLElement>('[data-sv]');
+  if (sv) {
+    const sumEl = sv.querySelector<HTMLElement>('[data-sv-sum]')!;
+    const save = sv.querySelector<HTMLElement>('[data-sv-save]')!;
+    const totals: Record<string, number> = {};
+    sv.querySelectorAll<HTMLElement>('[data-sv-panel]').forEach((p) => {
+      totals[p.dataset.svPanel!] = [...p.querySelectorAll('tr:not(.is-off) .c-price')].reduce((a, td) => a + (parseInt(td.textContent!.replace(/\D/g, '')) || 0), 0);
+    });
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let cur = totals.without;
+    function animate(to: number) {
+      if (reduce) { sumEl.textContent = String(to); cur = to; return; }
+      const from = cur, t0 = performance.now();
+      const step = (t: number) => {
+        const k = Math.min(1, (t - t0) / 500);
+        sumEl.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) requestAnimationFrame(step); else cur = to;
+      };
+      requestAnimationFrame(step);
+    }
+    sv.querySelectorAll<HTMLButtonElement>('[data-sv-tab]').forEach((b) => b.addEventListener('click', () => {
+      const k = b.dataset.svTab!;
+      sv.querySelectorAll('[data-sv-tab]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      sv.querySelectorAll<HTMLElement>('[data-sv-panel]').forEach((p) => (p.hidden = p.dataset.svPanel !== k));
+      save.hidden = k !== 'with';
+      sv.classList.toggle('is-with', k === 'with');
+      animate(totals[k]);
+    }));
+  }
+  // Калькулятор
+  const f = document.querySelector<HTMLFormElement>('[data-calc]');
+  if (f) {
+    const P = JSON.parse(f.dataset.calc!);
+    const out = f.querySelector('[data-calc-out]')!;
+    const upd = () => {
+      const t = (f.querySelector('input[name="t"]:checked') as HTMLInputElement).value;
+      const a = (f.querySelector('input[name="a"]:checked') as HTMLInputElement).value;
+      const p = P.find((x: any) => x.id === t);
+      out.textContent = `${a === '2' ? p.twoAxles : p.oneAxle} р.`;
+    };
+    f.addEventListener('change', upd); upd();
+  }
+</script>
+
+<style>
+  .vh { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: center; }
+  .vh__facts { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+  .vh__facts li { border: 1px solid var(--line); padding: 6px 10px; }
+  .vh__facts li:first-child { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  @media (max-width: 860px) { .vh { grid-template-columns: 1fr; } }
+
+  .sv { border: 1px solid var(--line); background: var(--bg); max-width: 880px; }
+  .sv__tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+  .sv__tabs button { border: 0; background: transparent; padding: 16px; font: 700 15px var(--font-body); cursor: pointer; min-height: 56px; }
+  .sv__tabs button + button { border-left: 1px solid var(--line); }
+  .sv__tabs [aria-selected='true'] { background: var(--ink); color: var(--bg); }
+  .sv__body { padding: clamp(16px, 3vw, 28px); }
+  .sv__cap { font-weight: 700; font-size: 18px; }
+  .sv .is-off td { color: var(--ink-3); text-decoration: line-through; }
+  .sv__total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-top: 18px; padding-top: 16px; border-top: 2px solid var(--line); }
+  .sv__total strong { font-size: clamp(36px, 6vw, 60px); line-height: 1; }
+  .sv__save { background: var(--accent); color: var(--accent-ink); padding: 4px 10px; font-weight: 600; }
+  .sv.is-with .sv__total strong { color: var(--ok); }
+
+  .vc { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: start; }
+  .calc { border: 2px solid var(--line); background: var(--paper); padding: clamp(18px, 3vw, 28px); box-shadow: 6px 6px 0 var(--accent); }
+  .calc fieldset { border: 0; padding: 0; margin: 14px 0; display: grid; gap: 6px; }
+  .calc legend { font-weight: 700; margin-bottom: 8px; }
+  .opt { position: relative; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; }
+  .opt span { display: block; padding: 12px 14px; border: 1px solid var(--line); background: var(--bg); }
+  .opt input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .opt input:focus-visible + span { outline: 3px solid var(--ink); }
+  .calc__out { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid var(--line); padding: 14px 0; margin-top: 8px; }
+  .calc__out output { font-size: 40px; font-weight: 600; }
+  .calc .btn { width: 100%; }
+  @media (max-width: 860px) { .vc { grid-template-columns: 1fr; } }
+
+  .g4 { list-style: none; padding: 0; margin: 0; grid-template-columns: repeat(4, 1fr); }
+  .g4 .n { font-size: 12px; color: var(--ink-3); }
+  .g4 h3 { margin: 10px 0 8px; }
+  .g4 p { color: var(--ink-2); margin: 0; font-size: 15px; }
+  @media (max-width: 1000px) { .g4 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .g4 { grid-template-columns: 1fr; } }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 5vw, 72px); }
+  .ben { list-style: none; padding: 0; margin: 16px 0 0; border-top: 2px solid var(--line); }
+  .ben li { padding: 18px 0; border-bottom: 1px solid var(--line-soft); }
+  .ben h3 { margin-bottom: 6px; }
+  .ben p { margin: 0; color: var(--ink-2); }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+
+  .faq { max-width: 900px; }
+  .faq details { border-top: 1px solid var(--line); }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; padding: 18px 40px 18px 0; font-weight: 700; font-size: 18px; list-style: none; position: relative; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; position: absolute; right: 4px; top: 12px; font: 400 28px var(--font-mono); color: var(--accent); }
+  .faq details[open] summary::after { content: '−'; }
+  .faq details p { color: var(--ink-2); padding-bottom: 12px; }
+</style>

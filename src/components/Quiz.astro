@@ -1,0 +1,186 @@
+---
+import Icon from './Icon.astro';
+import quiz from '../data/quiz.json';
+import { contacts, mainPhone, tel, getItem, itemPrice, vibroPrices, priceText } from '../lib/site';
+
+// Цены для итога квиза берём из прайса (services.json / vibrostend.json)
+const prices: Record<string, { car: string; jeep: string } | null> = {};
+for (const c of quiz.concerns) {
+  if (!c.priceRef) { prices[c.id] = null; continue; }
+  if (c.priceRef === 'vibro') {
+    const [car, jeep] = vibroPrices;
+    prices[c.id] = { car: priceText(car.oneAxle), jeep: priceText(jeep.oneAxle) };
+  } else {
+    const i = getItem(c.priceRef);
+    prices[c.id] = i ? { car: itemPrice(i), jeep: itemPrice(i, true) } : null;
+  }
+}
+const cfg = {
+  prices,
+  labels: Object.fromEntries(quiz.concerns.map((c) => [c.id, c.priceLabel])),
+  viber: contacts.viber,
+  tg: contacts.telegramUsername,
+  wa: contacts.whatsapp.number,
+};
+---
+<form class="quiz" id="quiz-form" novalidate>
+  <div class="quiz__bar" aria-hidden="true"><span></span></div>
+  <p class="quiz__step label"><b class="mono" data-q-n>1</b>&nbsp;/ 3</p>
+
+  <fieldset class="quiz__q" data-q="1">
+    <legend>Какая у вас машина?</legend>
+    <div class="chips">
+      {quiz.bodies.map((b, i) => (
+        <label class="chip"><input type="radio" name="body" value={b.id} data-label={b.label} checked={i === 0} /><span>{b.label}{b.hint && <small>{b.hint}</small>}</span></label>
+      ))}
+    </div>
+    <label class="field"><span>Марка и модель <small>(необязательно)</small></span><input name="car" type="text" autocomplete="off" placeholder="Например, Volkswagen Passat B6" maxlength="60" /></label>
+  </fieldset>
+
+  <fieldset class="quiz__q" data-q="2">
+    <legend>Что беспокоит?</legend>
+    <div class="chips">
+      {quiz.concerns.map((c) => (
+        <label class="chip"><input type="checkbox" name="concern" value={c.id} data-label={c.label} /><span>{c.label}</span></label>
+      ))}
+    </div>
+    <label class="field"><span>Опишите своими словами <small>(необязательно)</small></span><textarea name="details" rows="2" maxlength="300" placeholder="Например: стучит справа спереди на кочках"></textarea></label>
+  </fieldset>
+
+  <fieldset class="quiz__q" data-q="3">
+    <legend>Когда удобно приехать?</legend>
+    <div class="chips">
+      {quiz.times.map((t, i) => (
+        <label class="chip"><input type="radio" name="time" value={t} data-label={t} checked={i === 0} /><span>{t}</span></label>
+      ))}
+    </div>
+  </fieldset>
+
+  <div class="quiz__nav">
+    <button type="button" class="btn" data-prev hidden>Назад</button>
+    <button type="button" class="btn btn--accent" data-next>Дальше<Icon name="arrow" /></button>
+  </div>
+
+  <div class="quiz__res" data-res hidden>
+    <p class="label">Ваш заказ-наряд (черновик)</p>
+    <table class="order">
+      <thead><tr><th scope="col">Что сделать</th><th class="c-price" scope="col">Ориентир</th></tr></thead>
+      <tbody data-res-rows></tbody>
+    </table>
+    <p class="note">Ориентир по прайсу, работы без запчастей. Точную цену назовём после диагностики и согласуем до начала работ.</p>
+    <p class="label label--plain">Отправьте заявку готовым текстом</p>
+    <pre class="quiz__msg mono" data-msg></pre>
+    <div class="quiz__send">
+      <a class="btn btn--accent" data-send="viber" href="#"><Icon name="viber" />Viber</a>
+      <a class="btn" data-send="tg" href="#" target="_blank" rel="noopener"><Icon name="telegram" />Telegram</a>
+      <a class="btn" data-send="wa" href="#" target="_blank" rel="noopener"><Icon name="whatsapp" />WhatsApp</a>
+      <a class="btn" href={tel(mainPhone.number)}><Icon name="phone" />Позвонить</a>
+    </div>
+    <p class="quiz__hint">Текст также копируется в буфер обмена — если мессенджер не подставит его сам, просто вставьте. <button type="button" class="linkbtn" data-restart>Пройти заново</button></p>
+  </div>
+  <script type="application/json" id="quiz-cfg" set:html={JSON.stringify(cfg)} />
+</form>
+
+<script>
+  const form = document.getElementById('quiz-form') as HTMLFormElement;
+  const cfg = JSON.parse(document.getElementById('quiz-cfg')!.textContent!);
+  const qs = [...form.querySelectorAll<HTMLElement>('[data-q]')];
+  const prev = form.querySelector<HTMLButtonElement>('[data-prev]')!;
+  const next = form.querySelector<HTMLButtonElement>('[data-next]')!;
+  const res = form.querySelector<HTMLElement>('[data-res]')!;
+  const nEl = form.querySelector('[data-q-n]')!;
+  const bar = form.querySelector<HTMLElement>('.quiz__bar span')!;
+  let step = 0;
+  form.classList.add('is-js');
+
+  function show(i: number) {
+    step = i;
+    qs.forEach((q, k) => (q.hidden = k !== i));
+    const done = i >= qs.length;
+    res.hidden = !done;
+    prev.hidden = i === 0 || done;
+    next.hidden = done;
+    next.firstChild!.textContent = i === qs.length - 1 ? 'Показать итог' : 'Дальше';
+    nEl.textContent = String(Math.min(i + 1, 3));
+    bar.style.width = `${(Math.min(i + 1, 3) / 3) * 100}%`;
+    if (done) build();
+  }
+  function focusTop() {
+    const r = form.getBoundingClientRect();
+    if (r.top < 0) form.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  const val = (n: string) => (form.elements.namedItem(n) as HTMLInputElement | null)?.value?.trim() ?? '';
+  const checked = (n: string) => [...form.querySelectorAll<HTMLInputElement>(`input[name="${n}"]:checked`)];
+
+  function build() {
+    const body = checked('body')[0];
+    const jeep = body?.value !== 'car';
+    const concerns = checked('concern');
+    const rows = form.querySelector('[data-res-rows]')!;
+    rows.innerHTML = '';
+    const lines: string[] = [];
+    (concerns.length ? concerns : []).forEach((c) => {
+      const p = cfg.prices[c.value];
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.textContent = c.dataset.label + (cfg.labels[c.value] ? ` — ${cfg.labels[c.value].toLowerCase()}` : '');
+      const td2 = document.createElement('td');
+      td2.className = 'c-price' + (p ? '' : ' is-req');
+      td2.textContent = p ? (jeep ? p.jeep : p.car) : 'после осмотра';
+      tr.append(td1, td2); rows.append(tr);
+      lines.push(`— ${c.dataset.label}`);
+    });
+    if (!concerns.length) rows.innerHTML = '<tr><td>Осмотр и консультация</td><td class="c-price is-req">после осмотра</td></tr>';
+    const car = [body?.dataset.label, val('car')].filter(Boolean).join(', ');
+    const msg = [
+      'Здравствуйте! Хочу записаться в СТО «Правда».',
+      `Машина: ${car}`,
+      `Беспокоит:${lines.length ? '\n' + lines.join('\n') : ' нужна консультация'}`,
+      val('details') && `Подробнее: ${val('details')}`,
+      `Когда удобно: ${checked('time')[0]?.value ?? ''}`,
+    ].filter(Boolean).join('\n');
+    form.querySelector('[data-msg]')!.textContent = msg;
+    const t = encodeURIComponent(msg);
+    (form.querySelector('[data-send="viber"]') as HTMLAnchorElement).href = `viber://chat?number=${encodeURIComponent(cfg.viber)}&draft=${t}`;
+    (form.querySelector('[data-send="tg"]') as HTMLAnchorElement).href = `https://t.me/${cfg.tg}?text=${t}`;
+    (form.querySelector('[data-send="wa"]') as HTMLAnchorElement).href = `https://wa.me/${cfg.wa}?text=${t}`;
+    form.dataset.text = msg;
+  }
+  next.addEventListener('click', () => { show(step + 1); focusTop(); });
+  prev.addEventListener('click', () => { show(step - 1); focusTop(); });
+  form.querySelector('[data-restart]')!.addEventListener('click', () => { form.reset(); show(0); });
+  form.addEventListener('submit', (e) => e.preventDefault());
+  form.querySelectorAll('[data-send]').forEach((a) => a.addEventListener('click', () => {
+    navigator.clipboard?.writeText(form.dataset.text ?? '').catch(() => {});
+  }));
+  show(0);
+</script>
+
+<style>
+  .quiz { background: var(--paper); border: 1px solid var(--line); padding: clamp(18px, 3vw, 36px); position: relative; }
+  .quiz__bar { position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--bg-2); }
+  .quiz__bar span { display: block; height: 100%; width: 33%; background: var(--accent); transition: width .4s var(--ease); }
+  .quiz:not(.is-js) .quiz__step, .quiz:not(.is-js) .quiz__nav { display: none; }
+  .quiz__q { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+  .quiz__q legend { font: 700 clamp(20px, 2.4vw, 28px)/1.15 var(--font-head); margin-bottom: 18px; padding: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; cursor: pointer; }
+  .chip input { position: absolute; opacity: 0; inset: 0; }
+  .chip span { display: flex; flex-direction: column; justify-content: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--line); border-radius: var(--radius); font-weight: 600; background: var(--bg); transition: background-color .15s, border-color .15s; }
+  .chip small { font: 400 12px var(--font-mono); color: var(--ink-3); }
+  .chip:hover span { border-color: var(--accent); }
+  .chip input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .chip input:checked + span small { color: var(--accent-ink); }
+  .chip input:focus-visible + span { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .field { display: grid; gap: 6px; margin-top: 18px; max-width: 520px; }
+  .field > span { font-size: 14px; font-weight: 600; }
+  .field small { font-weight: 400; color: var(--ink-3); }
+  .field input, .field textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); padding: 12px 14px; border-radius: var(--radius); font-size: 16px; }
+  .quiz__nav { display: flex; gap: 10px; }
+  .quiz__res .order { margin: 12px 0 0; }
+  .quiz__msg { white-space: pre-wrap; background: var(--bg-2); border-left: 3px solid var(--accent); padding: 12px 14px; font-size: 13px; margin: 10px 0 14px; }
+  .quiz__send { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .quiz__hint { font-size: 13px; color: var(--ink-3); margin: 12px 0 0; }
+  .linkbtn { background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; color: var(--ink); }
+  @media (max-width: 720px) { .quiz__send { grid-template-columns: 1fr 1fr; } .quiz__send .btn { padding: 0 10px; } }
+</style>
