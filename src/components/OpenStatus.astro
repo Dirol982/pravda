@@ -1,6 +1,0 @@
----
-import { hoursGroups } from '../lib/site';
-interface Props { class?: string }
-const g = hoursGroups().map((x) => `${x.days} ${x.time ?? 'выходной'}`).join(', ');
----
-<span class:list={['status', Astro.props.class]} data-status title={g}>{g}</span>

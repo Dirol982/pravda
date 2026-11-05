@@ -1,0 +1,13 @@
+/* Цветовые варианты сайта. Палитра задаётся атрибутом data-palette на <html>, тема — data-theme.
+   Переключатель — в шапке; выбор запоминается. Ссылка на вариант: ?palette=gold&theme=light */
+:root, :root[data-palette='gold'] { --accent: #d6a73c; --accent-hi: #e6b952; --on-accent: #14110a; }
+:root[data-theme='light'], :root[data-theme='light'][data-palette='gold'] { --accent: #9b6f12; --accent-hi: #85600f; --on-accent: #ffffff; }
+
+:root[data-palette='signal'] { --accent: #f5a300; --accent-hi: #ffb526; --on-accent: #111111; }
+:root[data-theme='light'][data-palette='signal'] { --accent: #b86e00; --accent-hi: #9c5d00; --on-accent: #ffffff; }
+
+:root[data-palette='red'] { --accent: #d33b40; --accent-hi: #e2484d; --on-accent: #ffffff; }
+:root[data-theme='light'][data-palette='red'] { --accent: #c8323a; --accent-hi: #b02a31; --on-accent: #ffffff; }
+
+:root[data-palette='blue'] { --accent: #3b7cf6; --accent-hi: #5a92f8; --on-accent: #ffffff; }
+:root[data-theme='light'][data-palette='blue'] { --accent: #1f5fd4; --accent-hi: #184fb3; --on-accent: #ffffff; }
